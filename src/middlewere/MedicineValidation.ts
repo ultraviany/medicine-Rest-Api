@@ -1,6 +1,10 @@
 import { join } from "@prisma/client/runtime/library";
 import { NextFunction, Request, Response } from "express";
 import Joi from "joi";
+import path from "path"
+import fs from "fs"
+import { ROOT_DIRECTORY } from "../config";
+
 
 /**create a rule/schema 
  * for add new medicine
@@ -19,6 +23,15 @@ const createValidation = (req: Request, res: Response, next: NextFunction) => {
     
     const validation = createSchema.validate(req.body)
     if (validation.error) {
+        /**delate current uploaded file */
+        let fileName: string = req.file?.filename||``
+        let pathFile: string = path.join(ROOT_DIRECTORY,"public","medicine-photo",fileName)
+        /**check is file exists */
+        let fileExists = fs.existsSync(pathFile)
+        /**apakah file yang akan dihapus */
+        if(fileExists && fileName !==``){
+            /**delate file */
+            fs.unlinkSync(pathFile)}
         return res.status(404).json({
             message: validation
                 .error
@@ -50,6 +63,15 @@ const updateValidation = (
 ) => {
     const validation = updateSchema.validate(req.body)
     if(validation.error){
+        /**delate current uploaded file */
+        let fileName: string = req.file?.filename||``
+        let pathFile: string = path.join(ROOT_DIRECTORY,"public","medicine-photo",fileName)
+        /**check is file exists */
+        let fileExists = fs.existsSync(pathFile)
+        /**apakah file yang akan dihapus */
+        if(fileExists && fileName !==``){
+            /**delate file */
+            fs.unlinkSync(pathFile)}
         return res.status(400)
         .json({
             message: validation
@@ -60,5 +82,10 @@ const updateValidation = (
     }
     return next()
 }
+const authSchema = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().required()
+})
+
 
 export{createValidation,updateValidation}
